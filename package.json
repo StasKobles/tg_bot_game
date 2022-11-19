@@ -23,7 +23,9 @@
   },
   "homepage": "https://github.com/StasKobles/tg_bot_game#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "express": "^4.18.2",
     "node-telegram-bot-api": "^0.60.0",
     "nodemon": "^2.0.20",
     "pg": "^8.8.0",

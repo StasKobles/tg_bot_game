@@ -3,9 +3,15 @@ const { gameOptions, againOptions } = require("./gameOptions");
 const { stickers } = require("./stickers");
 const sequelize = require("./db");
 require("dotenv").config();
-const token = process.env.token;
+const token = process.env.TOKEN;
 const UserModel = require("./models");
 const bot = new TelegramApi(token, { polling: true });
+const webAppUrl = process.env.WEB_APP;
+const PORT = process.env.PORT;
+const app = express();
+
+app.use(express.json());
+app.use(cors());
 
 const chats = [];
 
@@ -27,6 +33,7 @@ const start = async () => {
     { command: "/start", description: "First meeting" },
     { command: "/stats", description: "Get your statistics" },
     { command: "/game", description: "Little guessing number game" },
+    { command: "/shop", description: "Here you can try React App in this Bot" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -39,12 +46,15 @@ const start = async () => {
         await bot.sendSticker(chatId, stickers.welcomePepe);
         return bot.sendMessage(
           chatId,
-          "Welcome to PEPE guessing bot! It`s my [little pet project](https://github.com/StasKobles/tg_bot_game)"
+          "Welcome to PEPE guessing bot! It`s my [ pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong)"
         );
       }
       if (text === "/start" && UserModel.findOne({ chatId })) {
         await bot.sendSticker(chatId, stickers.letsGoPepe);
-        return bot.sendMessage(chatId, "Hey! I know u. Let`s play");
+        return bot.sendMessage(
+          chatId,
+          "Hey, I know U. BTW it`s my [ pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!"
+        );
       }
       if (text === "/stats") {
         const user = await UserModel.findOne({ chatId });
@@ -57,6 +67,41 @@ const start = async () => {
       }
       if (text === "/game") {
         return startGame(chatId);
+      }
+      if (text === "/store") {
+        await bot.sendMessage(chatId, "Click the below button!", {
+          reply_markup: {
+            keyboard: [
+              [
+                {
+                  text: "Fill the delivery form",
+                  web_app: { url: webAppUrl + "/form" },
+                },
+              ],
+            ],
+          },
+        });
+        return bot.sendMessage(chatId, "Heres is our store!", {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Make the order", web_app: { url: webAppUrl } }],
+            ],
+          },
+        });
+      }
+      if (msg?.web_app_data?.data) {
+        try {
+          const data = JSON.parse(msg?.web_app_data?.data);
+
+          await bot.sendMessage(chatId, "Thanks for your time!");
+          await bot.sendMessage(chatId, "Your country is: " + data?.country);
+          await bot.sendMessage(chatId, "Your city is: " + data?.city);
+          return setTimeout(async () => {
+            await bot.sendMessage(chatId, "All info will be in this bot");
+          }, 3000);
+        } catch (e) {
+          return console.log(e);
+        }
       }
       bot.sendSticker(chatId, stickers.misunderstoodPepe);
       bot.sendMessage(chatId, "I don`t get u. Try send me other command");
@@ -86,4 +131,33 @@ bot.on("callback_query", async (msg) => {
   }
   await user.save();
 });
+app.post("/web-data", async (req, res) => {
+  const { queryId, product, totalPrice } = req.body;
+  try {
+    await bot.answerWebAppQuery(queryId, {
+      type: "article",
+      id: queryId,
+      title: "Authorization success!",
+      input_message_content: {
+        message_text: `Congratulations with your purchases. Your total price is ${totalPrice} and you bought ${products
+          .map((item) => item.title)
+          .join(", ")}`,
+      },
+    });
+    return res.status(200).json({});
+  } catch (e) {
+    await bot.answerWebAppQuery(queryId, {
+      type: "article",
+      id: queryId,
+      title: "We can`t finish this order",
+      input_message_content: {
+        message_text: "Some problems with your order",
+      },
+    });
+    return res.status(500).json({});
+  }
+});
+
+app.listen(PORT, () => console.log("Server started on PORT " + PORT));
+
 start();
