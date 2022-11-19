@@ -1,5 +1,7 @@
 const TelegramApi = require("node-telegram-bot-api");
 const { gameOptions, againOptions } = require("./gameOptions");
+const express = require("express");
+const cors = require("cors");
 const { stickers } = require("./stickers");
 const sequelize = require("./db");
 require("dotenv").config();
@@ -33,7 +35,7 @@ const start = async () => {
     { command: "/start", description: "First meeting" },
     { command: "/stats", description: "Get your statistics" },
     { command: "/game", description: "Little guessing number game" },
-    { command: "/shop", description: "Here you can try React App in this Bot" },
+    { command: "/store", description: "Here you can try React App in this Bot" },
   ]);
 
   bot.on("message", async (msg) => {
