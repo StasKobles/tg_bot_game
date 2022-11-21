@@ -8,7 +8,7 @@ const UserModel = require("./models");
 const bot = new TelegramApi(token, { polling: true });
 const webAppUrl = process.env.WEB_APP;
 
-const chats = [];
+const chats = {};
 
 const startGame = async (chatId) => {
   await bot.sendMessage(chatId, "Pepe guessed number from 1 to 9");
@@ -29,13 +29,13 @@ const start = async () => {
     console.log("Connection is break", e);
   }
   bot.setMyCommands([
-    { command: "/start", description: "First meeting" },
-    { command: "/stats", description: "Get your statistics" },
-    { command: "/game", description: "Little guessing number game" },
     {
       command: "/store",
       description: "Here you can try React App in this Bot",
     },
+    { command: "/game", description: "Little guessing number game" },
+    { command: "/stats", description: "Get your statistics" },
+
     { command: "/repo", description: "See the repo of this project on GitHub" },
   ]);
 
@@ -87,7 +87,15 @@ const start = async () => {
           },
         });
       }
-      if (text === "/repo") {await bot.send
+      if (text === "/repo") {
+        await bot.sendMessage(
+          chatId,
+          `[Bot part](https://github.com/StasKobles/tg_bot_game)`
+        );
+        return await bot.sendMessage(
+          chatId,
+          `[Web App part (React)](https://github.com/StasKobles/tg_web_app_react)`
+        );
       }
       if (msg?.web_app_data?.data) {
         const data = JSON.parse(msg?.web_app_data?.data);
@@ -99,7 +107,10 @@ const start = async () => {
             await bot.sendMessage(chatId, "Your country is: " + data?.country);
             await bot.sendMessage(chatId, "Your city is: " + data?.city);
             return setTimeout(async () => {
-              await bot.sendMessage(chatId, "All info will be in this bot");
+              await bot.sendMessage(
+                chatId,
+                "Thank`s for your order! We will connect you soon"
+              );
             }, 3000);
           } catch (e) {
             return console.log(e);
