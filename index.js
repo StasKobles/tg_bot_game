@@ -90,11 +90,13 @@ const start = async () => {
       if (text === "/repo") {
         await bot.sendMessage(
           chatId,
-          `[Bot part](https://github.com/StasKobles/tg_bot_game)`
+          `[Bot part](https://github.com/StasKobles/tg_bot_game)`,
+          { parse_mode: "Markdown" }
         );
         return await bot.sendMessage(
           chatId,
-          `[Web App part (React)](https://github.com/StasKobles/tg_web_app_react)`
+          `[Web App part (React)](https://github.com/StasKobles/tg_web_app_react)`,
+          { parse_mode: "Markdown" }
         );
       }
       if (msg?.web_app_data?.data) {
