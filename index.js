@@ -44,20 +44,12 @@ const start = async () => {
     const chatId = msg.chat.id;
 
     try {
-      if (text === "/start" && !UserModel.findOne({ chatId })) {
+      if (text === "/start") {
         await UserModel.create({ chatId });
         await bot.sendSticker(chatId, stickers.welcomePepe);
         return bot.sendMessage(
           chatId,
           `Welcome to PEPE guessing bot! BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
-          { parse_mode: "Markdown", disable_web_page_preview: true }
-        );
-      }
-      if (text === "/start" && UserModel.findOne({ chatId })) {
-        await bot.sendSticker(chatId, stickers.letsGoPepe);
-        return bot.sendMessage(
-          chatId,
-          `Hey, I know U. BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
           { parse_mode: "Markdown", disable_web_page_preview: true }
         );
       }
