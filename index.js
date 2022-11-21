@@ -1,7 +1,5 @@
 const TelegramApi = require("node-telegram-bot-api");
 const { gameOptions, againOptions } = require("./gameOptions");
-const express = require("express");
-const cors = require("cors");
 const { stickers } = require("./stickers");
 const sequelize = require("./db");
 require("dotenv").config();
@@ -9,19 +7,18 @@ const token = process.env.TOKEN;
 const UserModel = require("./models");
 const bot = new TelegramApi(token, { polling: true });
 const webAppUrl = process.env.WEB_APP;
-const PORT = process.env.PORT;
-const app = express();
-
-app.use(express.json());
-app.use(cors());
 
 const chats = [];
 
 const startGame = async (chatId) => {
-  await bot.sendMessage(chatId, "Pepe will guess a number from 1 to 9");
+  await bot.sendMessage(chatId, "Pepe guessed number from 1 to 9");
   const number = Math.floor(Math.random() * 10);
   chats[chatId] = number;
-  await bot.sendMessage(chatId, "Pepe ready. What is it?)", gameOptions);
+  await bot.sendMessage(
+    chatId,
+    "Pepe is ready. What is it number?)",
+    gameOptions
+  );
   await bot.sendSticker(chatId, stickers.pepeSarcastic);
 };
 const start = async () => {
@@ -35,7 +32,11 @@ const start = async () => {
     { command: "/start", description: "First meeting" },
     { command: "/stats", description: "Get your statistics" },
     { command: "/game", description: "Little guessing number game" },
-    { command: "/store", description: "Here you can try React App in this Bot" },
+    {
+      command: "/store",
+      description: "Here you can try React App in this Bot",
+    },
+    { command: "/repo", description: "See the repo of this project on GitHub" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -48,14 +49,16 @@ const start = async () => {
         await bot.sendSticker(chatId, stickers.welcomePepe);
         return bot.sendMessage(
           chatId,
-          "Welcome to PEPE guessing bot! It`s my [ pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong)"
+          `Welcome to PEPE guessing bot! BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
+          { parse_mode: "Markdown", disable_web_page_preview: true }
         );
       }
       if (text === "/start" && UserModel.findOne({ chatId })) {
         await bot.sendSticker(chatId, stickers.letsGoPepe);
         return bot.sendMessage(
           chatId,
-          "Hey, I know U. BTW it`s my [ pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!"
+          `Hey, I know U. BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
+          { parse_mode: "Markdown", disable_web_page_preview: true }
         );
       }
       if (text === "/stats") {
@@ -71,38 +74,75 @@ const start = async () => {
         return startGame(chatId);
       }
       if (text === "/store") {
-        await bot.sendMessage(chatId, "Click the below button!", {
+        return bot.sendMessage(chatId, "Here is our store!", {
           reply_markup: {
             keyboard: [
               [
                 {
-                  text: "Fill the delivery form",
-                  web_app: { url: webAppUrl + "/form" },
+                  text: "Make your order",
+                  web_app: { url: webAppUrl },
                 },
               ],
             ],
           },
         });
-        return bot.sendMessage(chatId, "Heres is our store!", {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "Make the order", web_app: { url: webAppUrl } }],
-            ],
-          },
-        });
+      }
+      if (text === "/repo") {await bot.send
       }
       if (msg?.web_app_data?.data) {
-        try {
-          const data = JSON.parse(msg?.web_app_data?.data);
-
-          await bot.sendMessage(chatId, "Thanks for your time!");
-          await bot.sendMessage(chatId, "Your country is: " + data?.country);
-          await bot.sendMessage(chatId, "Your city is: " + data?.city);
-          return setTimeout(async () => {
-            await bot.sendMessage(chatId, "All info will be in this bot");
-          }, 3000);
-        } catch (e) {
-          return console.log(e);
+        const data = JSON.parse(msg?.web_app_data?.data);
+        if (!!data.city) {
+          try {
+            await bot.sendMessage(chatId, "Thanks for your time!", {
+              reply_markup: { remove_keyboard: true },
+            });
+            await bot.sendMessage(chatId, "Your country is: " + data?.country);
+            await bot.sendMessage(chatId, "Your city is: " + data?.city);
+            return setTimeout(async () => {
+              await bot.sendMessage(chatId, "All info will be in this bot");
+            }, 3000);
+          } catch (e) {
+            return console.log(e);
+          }
+        }
+        if (!!data.products) {
+          try {
+            await bot.sendMessage(chatId, "That is your order!", {
+              reply_markup: { remove_keyboard: true },
+            });
+            await data.products.forEach((product) => {
+              bot.sendMessage(
+                chatId,
+                `${product.title} for ${product.price} $`
+              );
+            });
+            setTimeout(async () => {
+              await bot.sendMessage(
+                chatId,
+                `Total price is ${data.totalPrice} $`
+              );
+            }, 1000);
+            return setTimeout(async () => {
+              await bot.sendMessage(
+                chatId,
+                "Let`s complete delivery options!",
+                {
+                  reply_markup: {
+                    keyboard: [
+                      [
+                        {
+                          text: "Delivery form",
+                          web_app: { url: webAppUrl + "/form" },
+                        },
+                      ],
+                    ],
+                  },
+                }
+              );
+            }, 2000);
+          } catch (e) {
+            return console.log(e);
+          }
         }
       }
       bot.sendSticker(chatId, stickers.misunderstoodPepe);
@@ -133,33 +173,4 @@ bot.on("callback_query", async (msg) => {
   }
   await user.save();
 });
-app.post("/web-data", async (req, res) => {
-  const { queryId, product, totalPrice } = req.body;
-  try {
-    await bot.answerWebAppQuery(queryId, {
-      type: "article",
-      id: queryId,
-      title: "Authorization success!",
-      input_message_content: {
-        message_text: `Congratulations with your purchases. Your total price is ${totalPrice} and you bought ${products
-          .map((item) => item.title)
-          .join(", ")}`,
-      },
-    });
-    return res.status(200).json({});
-  } catch (e) {
-    await bot.answerWebAppQuery(queryId, {
-      type: "article",
-      id: queryId,
-      title: "We can`t finish this order",
-      input_message_content: {
-        message_text: "Some problems with your order",
-      },
-    });
-    return res.status(500).json({});
-  }
-});
-
-app.listen(PORT, () => console.log("Server started on PORT " + PORT));
-
 start();
