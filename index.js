@@ -58,7 +58,7 @@ const start = async () => {
         await bot.sendSticker(chatId, stickers.pepeHolmes);
         return bot.sendMessage(
           chatId,
-          `||*${msg.from.first_name}* ${msg.from.last_name}|| , You have ${user.right} right answers and ${user.wrong} wrong answers`,
+          `||*${msg.from.first_name}* *${msg.from.last_name}*|| , You have ${user.right} right answers and ${user.wrong} wrong answers`,
           { parse_mode: "MarkdownV2" }
         );
       }
