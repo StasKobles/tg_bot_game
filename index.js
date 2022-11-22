@@ -45,7 +45,10 @@ const start = async () => {
 
     try {
       if (text === "/start") {
-        if (!!UserModel.findOne({ chatId })) {
+        try {
+          await UserModel.create({ chatId });
+        } catch (e) {
+          await bot.sendSticker(chatId, stickers.welcomePepe);
           await bot.sendMessage(
             chatId,
             `Hey, I know you! BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
@@ -57,20 +60,16 @@ const start = async () => {
             { parse_mode: "Markdown" }
           );
         }
-        if (UserModel.findOne({ chatId }) == null) {
-          await UserModel.create({ chatId });
-          await bot.sendSticker(chatId, stickers.welcomePepe);
-          await bot.sendMessage(
-            chatId,
-            `Welcome to PEPE guessing bot! It's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
-            { parse_mode: "Markdown", disable_web_page_preview: true }
-          );
-          return await bot.sendMessage(
-            chatId,
-            "Try */store* to see Web App Store or */game*",
-            { parse_mode: "Markdown" }
-          );
-        }
+        await bot.sendMessage(
+          chatId,
+          `Welcome to PEPE guessing bot! It's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
+          { parse_mode: "Markdown", disable_web_page_preview: true }
+        );
+        return await bot.sendMessage(
+          chatId,
+          "Try */store* to see Web App Store or */game*",
+          { parse_mode: "Markdown" }
+        );
       }
       if (text === "/stats") {
         const user = await UserModel.findOne({ chatId });
@@ -182,19 +181,19 @@ bot.on("callback_query", async (msg) => {
   if (data === "/again") {
     return startGame(chatId);
   }
-  const tgUser = await UserModel.findOne({ chatId });
+  const user = await UserModel.findOne({ chatId });
   if (data == chats[chatId]) {
-    tgUser.right += 1;
+    user.right += 1;
     await bot.sendMessage(chatId, `You're right! ${data} is correct number!`);
     await bot.sendSticker(chatId, stickers.wellDonePepe, againOptions);
   } else {
-    tgUser.wrong += 1;
+    user.wrong += 1;
     await bot.sendMessage(
       chatId,
       `NOOO! It's wrong answer) I guess ${chats[chatId]}`
     );
     await bot.sendSticker(chatId, stickers.roflPepe, againOptions);
   }
-  await tgUser.save();
+  await user.save();
 });
 start();
