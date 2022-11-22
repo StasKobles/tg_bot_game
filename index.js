@@ -182,19 +182,19 @@ bot.on("callback_query", async (msg) => {
   if (data === "/again") {
     return startGame(chatId);
   }
-  const user = await UserModel.findOne({ chatId });
+  const tgUser = await UserModel.findOne({ chatId });
   if (data == chats[chatId]) {
-    user.right += 1;
+    tgUser.right += 1;
     await bot.sendMessage(chatId, `You're right! ${data} is correct number!`);
     await bot.sendSticker(chatId, stickers.wellDonePepe, againOptions);
   } else {
-    user.wrong += 1;
+    tgUser.wrong += 1;
     await bot.sendMessage(
       chatId,
       `NOOO! It's wrong answer) I guess ${chats[chatId]}`
     );
     await bot.sendSticker(chatId, stickers.roflPepe, againOptions);
   }
-  await user.save();
+  await tgUser.save();
 });
 start();
