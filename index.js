@@ -45,13 +45,32 @@ const start = async () => {
 
     try {
       if (text === "/start") {
-        await UserModel.create({ chatId });
-        await bot.sendSticker(chatId, stickers.welcomePepe);
-        return bot.sendMessage(
-          chatId,
-          `Welcome to PEPE guessing bot! BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
-          { parse_mode: "Markdown", disable_web_page_preview: true }
-        );
+        if (!!UserModel.findOne({ chatId })) {
+          await bot.sendMessage(
+            chatId,
+            `Hey, I know you! BTW it's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
+            { parse_mode: "Markdown", disable_web_page_preview: true }
+          );
+          return await bot.sendMessage(
+            chatId,
+            "Try */store* to see Web App Store or */game*",
+            { parse_mode: "Markdown" }
+          );
+        }
+        if (UserModel.findOne({ chatId }) == null) {
+          await UserModel.create({ chatId });
+          await bot.sendSticker(chatId, stickers.welcomePepe);
+          await bot.sendMessage(
+            chatId,
+            `Welcome to PEPE guessing bot! It's my [pet project](https://github.com/StasKobles/tg_bot_game). Here you can try to use Online Store in WebApp or play guessing game with PEPE (He is so strong). Enjoy it!`,
+            { parse_mode: "Markdown", disable_web_page_preview: true }
+          );
+          return await bot.sendMessage(
+            chatId,
+            "Try */store* to see Web App Store or */game*",
+            { parse_mode: "Markdown" }
+          );
+        }
       }
       if (text === "/stats") {
         const user = await UserModel.findOne({ chatId });
