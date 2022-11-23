@@ -9,7 +9,7 @@
 
 **Client:** React, Telegram API
 
-**Server:** PostgreSQL
+**Server:** PostgreSQL, Node
 
 
 ## Features
@@ -21,9 +21,6 @@
 
 
 
-## Lessons Learned
-
-What did you learn while building this project? What challenges did you face and how did you overcome them?
 
 
 ## Related
