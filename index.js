@@ -11,7 +11,7 @@ const webAppUrl = process.env.WEB_APP;
 const chats = {};
 
 const startGame = async (chatId) => {
-  await bot.sendMessage(chatId, "Pepe guessed number from 1 to 9");
+  await bot.sendMessage(chatId, "Pepe thinking of a number from 1 to 9");
   const number = Math.floor(Math.random() * 10);
   chats[chatId] = number;
   await bot.sendMessage(
@@ -184,16 +184,18 @@ bot.on("callback_query", async (msg) => {
   const user = await UserModel.findOne({ chatId });
   if (data == chats[chatId]) {
     user.right += 1;
+    await user.save();
     await bot.sendMessage(chatId, `You're right! ${data} is correct number!`);
     await bot.sendSticker(chatId, stickers.wellDonePepe, againOptions);
   } else {
     user.wrong += 1;
+    await user.save();
     await bot.sendMessage(
       chatId,
       `NOOO! It's wrong answer) I guess ${chats[chatId]}`
     );
     await bot.sendSticker(chatId, stickers.roflPepe, againOptions);
   }
-  await user.save();
+  
 });
 start();
