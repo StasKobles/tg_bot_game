@@ -46,7 +46,7 @@ const start = async () => {
     try {
       if (text === "/start") {
         try {
-          await UserModel.create({ chatId });
+          await UserModel.create({ chatId: chatId });
         } catch (e) {
           await bot.sendSticker(chatId, stickers.welcomePepe);
           await bot.sendMessage(
@@ -72,7 +72,9 @@ const start = async () => {
         );
       }
       if (text === "/stats") {
-        const user = await UserModel.findOne({ chatId });
+        const user = await UserModel.findOne({
+          where: { chatId: chatId.toString() },
+        });
         await bot.sendSticker(chatId, stickers.pepeHolmes);
         return bot.sendMessage(
           chatId,
@@ -174,28 +176,29 @@ const start = async () => {
       return bot.sendMessage(chatId, `There is some error, ${e}`);
     }
   });
+
+  bot.on("callback_query", async (msg) => {
+    const data = msg.data;
+    const chatId = msg.message.chat.id;
+    if (data === "/again") {
+      return startGame(chatId);
+    }
+    const user = await UserModel.findOne({
+      where: { chatId: chatId.toString() },
+    });
+    if (data == chats[chatId]) {
+      user.right += 1;
+      await bot.sendMessage(chatId, `You're right! ${data} is correct number!`);
+      await bot.sendSticker(chatId, stickers.wellDonePepe, againOptions);
+    } else {
+      user.wrong += 1;
+      await bot.sendMessage(
+        chatId,
+        `NOOO! It's wrong answer) I guess ${chats[chatId]}`
+      );
+      await bot.sendSticker(chatId, stickers.roflPepe, againOptions);
+    }
+    await user.save();
+  });
 };
-bot.on("callback_query", async (msg) => {
-  const data = msg.data;
-  const chatId = msg.message.chat.id;
-  if (data === "/again") {
-    return startGame(chatId);
-  }
-  const user = await UserModel.findOne({ chatId });
-  if (data == chats[chatId]) {
-    user.right += 1;
-    await user.save();
-    await bot.sendMessage(chatId, `You're right! ${data} is correct number!`);
-    await bot.sendSticker(chatId, stickers.wellDonePepe, againOptions);
-  } else {
-    user.wrong += 1;
-    await user.save();
-    await bot.sendMessage(
-      chatId,
-      `NOOO! It's wrong answer) I guess ${chats[chatId]}`
-    );
-    await bot.sendSticker(chatId, stickers.roflPepe, againOptions);
-  }
-  
-});
 start();
